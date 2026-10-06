@@ -118,8 +118,12 @@ public class AudioSessionHandler {
 
   func configureBackgroundPlayback() {
     do {
-      try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playback)
-      try AVAudioSession.sharedInstance().setActive(true)
+      let session = AVAudioSession.sharedInstance()
+      try session.setCategory(AVAudioSession.Category.playback)
+      if #available(iOS 15.0, *) {
+        try session.setSupportsMultichannelContent(true)
+      }
+      try session.setActive(true)
     } catch {
       eventLogger?.report(topic: "Audio Session", error: error)
     }
