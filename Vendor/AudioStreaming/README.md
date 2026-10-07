@@ -19,3 +19,8 @@ Local changes:
   every track show as multichannel Spatial Audio.
 - Decode at 48 kHz, the rate of AirPods and the iPhone output, instead of
   44.1 kHz, so a track is resampled at most once.
+- Seek FLAC exactly. A FLAC seek starts at a byte offset estimated from the
+  average bitrate, which can be far off. The first frame header received gives
+  the real sample position (`FlacFrameLocator`); a miss of more than a second is
+  retried from a corrected offset (up to four tries), and the shown time is set
+  to where playback really is.

@@ -56,6 +56,19 @@ final class AudioFileStreamProcessor {
   var discontinuous: Bool = false
   var inputFormat = AudioStreamBasicDescription()
 
+  /// Where a FLAC seek should land; checked against the first frame received.
+  private struct FlacSeekCheck {
+    let requestedTime: Double
+    let byteOffset: Int64
+    let attempt: Int
+    var buffer = Data()
+  }
+
+  private var flacSeekCheck: FlacSeekCheck?
+  private static let flacSeekTolerance: Double = 1
+  private static let flacSeekMaxAttempts = 4
+  private static let flacSeekMaxScanBytes = 1 << 20
+
   var currentFileFormat: String = ""
   let fileFormatsForDelayedConverterCreation: Set = ["fa4m", "f4pm"]
 
@@ -135,6 +148,11 @@ final class AudioFileStreamProcessor {
     }
 
     guard let stream = audioFileStream else { return 0 }
+    var data = data
+    if flacSeekCheck != nil {
+      guard let aligned = alignFlacSeek(with: data) else { return noErr }
+      data = aligned
+    }
     let flags: AudioFileStreamParseFlags = discontinuous ? .discontinuity : .init()
     return data.withUnsafeBytes { buffer -> OSStatus in
       AudioFileStreamParseBytes(stream, UInt32(buffer.count), buffer.baseAddress, flags)
@@ -231,11 +249,89 @@ final class AudioFileStreamProcessor {
       AudioConverterReset(converted)
     }
 
+    // FLAC has no fixed bytes per second, so the offset is only an estimate.
+    // Hold the data back until a frame header shows where it landed.
+    if readingEntry.audioStreamFormat.mFormatID == kAudioFormatFLAC,
+       seekByteOffset > Int64(readingEntry.audioStreamState.dataOffset) {
+      flacSeekCheck = FlacSeekCheck(
+        requestedTime: readingEntry.seekRequest.time,
+        byteOffset: seekByteOffset,
+        attempt: 1
+      )
+    } else {
+      flacSeekCheck = nil
+    }
+
     readingEntry.reset()
     readingEntry.seek(at: Int(seekByteOffset))
     rendererContext.waitingForDataAfterSeekFrameCount.write { $0 = 0 }
     playerContext.setInternalState(to: .waitingForDataAfterSeek)
     rendererContext.resetBuffers()
+  }
+
+  /// Handles the first bytes after a FLAC seek. Finds the first frame header,
+  /// which gives the exact sample position. If the estimate missed by more than
+  /// `flacSeekTolerance`, seeks again from an offset corrected by the measured
+  /// bytes per second. Otherwise sets the entry's seek time to the real
+  /// position, so the shown time is right, and returns the bytes from that
+  /// frame on. Returns nil while more data is needed or a new seek is pending.
+  private func alignFlacSeek(with data: Data) -> Data? {
+    guard var check = flacSeekCheck, let entry = playerContext.audioReadingEntry else {
+      flacSeekCheck = nil
+      return data
+    }
+    check.buffer.append(data)
+
+    entry.lock.lock()
+    let format = entry.audioStreamFormat
+    let dataOffset = Int64(entry.audioStreamState.dataOffset)
+    let length = Int64(entry.length)
+    entry.lock.unlock()
+
+    guard format.mSampleRate > 0,
+          let frame = FlacFrameLocator.firstFrame(
+            in: check.buffer,
+            channels: Int(format.mChannelsPerFrame),
+            sampleRate: Int(format.mSampleRate),
+            blockSize: Int(format.mFramesPerPacket)
+          )
+    else {
+      if check.buffer.count > Self.flacSeekMaxScanBytes || format.mSampleRate <= 0 {
+        flacSeekCheck = nil
+        return check.buffer
+      }
+      flacSeekCheck = check
+      return nil
+    }
+
+    let actualTime = Double(frame.firstSample) / format.mSampleRate
+    let frameByteOffset = check.byteOffset + Int64(frame.offset)
+    if abs(check.requestedTime - actualTime) > Self.flacSeekTolerance,
+       check.attempt < Self.flacSeekMaxAttempts, actualTime > 0 {
+      let bytesPerSecond = Double(frameByteOffset - dataOffset) / actualTime
+      var next = dataOffset + Int64(check.requestedTime * bytesPerSecond)
+      if length > 0 { next = min(next, length - 1) }
+      if next > dataOffset, next != check.byteOffset {
+        Logger.debug(
+          "FLAC seek landed at \(actualTime)s for \(check.requestedTime)s; retrying",
+          category: .generic
+        )
+        flacSeekCheck = FlacSeekCheck(
+          requestedTime: check.requestedTime,
+          byteOffset: next,
+          attempt: check.attempt + 1
+        )
+        entry.reset()
+        entry.seek(at: Int(next))
+        return nil
+      }
+    }
+
+    entry.lock.lock()
+    entry.seekTime = actualTime
+    entry.lock.unlock()
+    flacSeekCheck = nil
+    return check.buffer.subdata(in: frame.offset ..< check.buffer.count)
   }
 
   /// Creates an `AudioConverter` instance to be used for converting the remote audio data to the canonical audio format

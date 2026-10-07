@@ -61,6 +61,7 @@ let package = Package(
       resources: [
         // Test resources for metadata stream processor tests
         .copy("Streaming/Metadata Stream Processor/raw-audio-streams"),
+        .copy("Streaming/Flac/sine-noise-5.1-48k.flac"),
       ]
     ),
   ]
