@@ -2322,7 +2322,7 @@
 				50F40A392C9088B30097FE63 /* XCRemoteSwiftPackageReference "Ifrit" */,
 				505249792D10CBC70005EEB0 /* XCRemoteSwiftPackageReference "swift-collections" */,
 				500E70D02E2FD63900636770 /* XCRemoteSwiftPackageReference "DominantColors" */,
-				50B166A82ED071A100F7A1D6 /* XCLocalSwiftPackageReference "AudioStreaming" */,
+				50B166A82ED071A100F7A1D6 /* XCRemoteSwiftPackageReference "AudioStreaming" */,
 			);
 			productRefGroup = 508385E521C5965B00C4BB32 /* Products */;
 			projectDirPath = "";
@@ -3431,14 +3431,15 @@
 				version = 2.0.3;
 			};
 		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCLocalSwiftPackageReference section */
-		50B166A82ED071A100F7A1D6 /* XCLocalSwiftPackageReference "AudioStreaming" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = Vendor/AudioStreaming;
+		50B166A82ED071A100F7A1D6 /* XCRemoteSwiftPackageReference "AudioStreaming" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ollisulopuisto/AudioStreaming.git";
+			requirement = {
+				kind = revision;
+				revision = 45868dae908562208b68327c1ce8a26d6a98bdf1;
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		500E70D12E2FD63900636770 /* DominantColors */ = {
@@ -3448,7 +3449,7 @@
 		};
 		502B8A4C2EE0CE40004CA3AD /* AudioStreaming */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 50B166A82ED071A100F7A1D6 /* XCLocalSwiftPackageReference "AudioStreaming" */;
+			package = 50B166A82ED071A100F7A1D6 /* XCRemoteSwiftPackageReference "AudioStreaming" */;
 			productName = AudioStreaming;
 		};
 		5052497A2D10CBC70005EEB0 /* Collections */ = {
@@ -3463,7 +3464,7 @@
 		};
 		50699C812ED859B20039BECD /* AudioStreaming */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 50B166A82ED071A100F7A1D6 /* XCLocalSwiftPackageReference "AudioStreaming" */;
+			package = 50B166A82ED071A100F7A1D6 /* XCRemoteSwiftPackageReference "AudioStreaming" */;
 			productName = AudioStreaming;
 		};
 		507DFE4B2B1E57BE002BBB1D /* MarqueeLabel */ = {
@@ -3508,7 +3509,7 @@
 		};
 		50B166A92ED071EC00F7A1D6 /* AudioStreaming */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 50B166A82ED071A100F7A1D6 /* XCLocalSwiftPackageReference "AudioStreaming" */;
+			package = 50B166A82ED071A100F7A1D6 /* XCRemoteSwiftPackageReference "AudioStreaming" */;
 			productName = AudioStreaming;
 		};
 		50BE5DA6285714A200156FC6 /* CallbackURLKit */ = {
