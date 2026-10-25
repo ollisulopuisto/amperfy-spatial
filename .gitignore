@@ -72,3 +72,11 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# Backup and temporary files
+*~
+*.bak
+*.backup
+*.swp
+*.tmp
+
