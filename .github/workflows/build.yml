@@ -1,0 +1,68 @@
+name: Build Amperfy
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    name: Build iOS App
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 16
+        run: |
+          XCODE_APP=$(find /Applications -maxdepth 1 -name "Xcode_16*.app" | sort -V | tail -n 1)
+          if [ -n "$XCODE_APP" ]; then
+            echo "Selecting $XCODE_APP"
+            sudo xcode-select -s "$XCODE_APP/Contents/Developer"
+          fi
+          xcodebuild -version
+
+      - name: Resolve Swift Package Dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project Amperfy.xcodeproj \
+            -scheme Amperfy
+
+      - name: Build and Archive Amperfy
+        run: |
+          xcodebuild archive \
+            -project Amperfy.xcodeproj \
+            -scheme Amperfy \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath build/Amperfy.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
+            COMPILER_INDEX_STORE_ENABLE=NO
+
+      - name: Package App Artifacts
+        run: |
+          mkdir -p Payload
+          cp -R build/Amperfy.xcarchive/Products/Applications/Amperfy.app Payload/
+          zip -r Amperfy-unsigned.ipa Payload
+          zip -r Amperfy.app.zip build/Amperfy.xcarchive/Products/Applications/Amperfy.app
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Amperfy-iOS-build
+          path: |
+            Amperfy-unsigned.ipa
+            Amperfy.app.zip
