@@ -27,6 +27,7 @@ Amperfy is an iOS/iPadOS/macOS app written in Swift to interact with an [Ampache
 - Multi account
 - Offline mode
 - CarPlay
+- Multichannel and Spatial Audio playback (5.1 surround sound support)
 - Gapless playback for appropriate media file formats
 - Music, Podcast and Radio support
 - Siri play media command, Siri Shortcuts and App Intents
@@ -66,7 +67,7 @@ Pull requests are always welcome. Please execute `AmperfyKitTests` to ensure cod
 
 ## Attributions
 
-- [AudioStreaming](https://github.com/dimitris-c/AudioStreaming) by [Dimitris C.](https://github.com/dimitris-c) is licensed under [MIT License](https://github.com/dimitris-c/AudioStreaming/blob/main/LICENSE)
+- [AudioStreaming](https://github.com/ollisulopuisto/AudioStreaming) (forked from [Dimitris C.](https://github.com/dimitris-c/AudioStreaming)) with multichannel audio support, licensed under [MIT License](https://github.com/dimitris-c/AudioStreaming/blob/main/LICENSE)
 - [MarqueeLabel](https://github.com/cbpowell/MarqueeLabel) by [Charles Powell](https://github.com/cbpowell) is licensed under [MIT License](https://github.com/cbpowell/MarqueeLabel/blob/master/LICENSE)
 - [NotificationBanner](https://github.com/Daltron/NotificationBanner) by [Dalton Hinterscher](https://github.com/Daltron) is licensed under [MIT License](https://github.com/Daltron/NotificationBanner/blob/master/LICENSE)
 - [ID3TagEditor](https://github.com/chicio/ID3TagEditor) by [Fabrizio Duroni](https://github.com/chicio) is licensed under [MIT License](https://github.com/chicio/ID3TagEditor/blob/master/LICENSE.md)
