@@ -3436,7 +3436,7 @@
 			repositoryURL = "https://github.com/ollisulopuisto/AudioStreaming.git";
 			requirement = {
 				kind = revision;
-				revision = 45868dae908562208b68327c1ce8a26d6a98bdf1;
+				revision = f458468a5e1b5804f89561f4208267a1c4f0f744;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
