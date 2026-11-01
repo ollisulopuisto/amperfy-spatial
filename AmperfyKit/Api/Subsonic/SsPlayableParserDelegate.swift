@@ -31,6 +31,13 @@ class SsPlayableParserDelegate: SsXmlLibWithArtworkParser {
     parsedCount > 0 ? isCached : false
   }
 
+  /// Reusable ISO8601DateFormatter to avoid expensive allocation per XML element during sync/parsing
+  let iso8601DateFormatter: ISO8601DateFormatter = {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    return formatter
+  }()
+
   override func parser(
     _ parser: XMLParser,
     didStartElement elementName: String,
@@ -89,9 +96,7 @@ class SsPlayableParserDelegate: SsXmlLibWithArtworkParser {
       playableBuffer?.rating = Int(attributeDict["userRating"] ?? "0") ?? 0
       if let starredDate = attributeDict["starred"] {
         playableBuffer?.isFavorite = true
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let date = dateFormatter.date(from: starredDate) {
+        if let date = iso8601DateFormatter.date(from: starredDate) {
           playableBuffer?.starredDate = date
         } else {
           playableBuffer?.starredDate = nil
