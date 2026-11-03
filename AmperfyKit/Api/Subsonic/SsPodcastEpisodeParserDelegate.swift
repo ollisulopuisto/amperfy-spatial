@@ -29,6 +29,14 @@ class SsPodcastEpisodeParserDelegate: SsPlayableParserDelegate {
   var episodeBuffer: PodcastEpisode?
   var parsedEpisodes = [PodcastEpisode]()
 
+  /// Reusable DateFormatter to avoid expensive allocation per XML element during sync/parsing
+  private let publishDateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+    formatter.timeZone = NSTimeZone(name: "UTC")! as TimeZone
+    return formatter
+  }()
+
   init(
     performanceMonitor: ThreadPerformanceMonitor,
     podcast: Podcast?,
@@ -77,14 +85,11 @@ class SsPodcastEpisodeParserDelegate: SsPlayableParserDelegate {
       }
       if let publishDate = attributeDict["publishDate"], publishDate.count >= 19 {
         // "2011-02-03T14:46:43"
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-        dateFormatter.timeZone = NSTimeZone(name: "UTC")! as TimeZone
         let dateWithoutTimeZoneString = String(publishDate[..<publishDate.index(
           publishDate.startIndex,
           offsetBy: 19
         )])
-        episodeBuffer?.publishDate = dateFormatter
+        episodeBuffer?.publishDate = publishDateFormatter
           .date(from: dateWithoutTimeZoneString) ?? Date(timeIntervalSince1970: TimeInterval())
       }
       if let status = attributeDict["status"] {
