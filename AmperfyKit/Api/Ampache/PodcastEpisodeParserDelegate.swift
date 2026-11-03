@@ -29,6 +29,21 @@ class PodcastEpisodeParserDelegate: PlayableParserDelegate {
   var episodeBuffer: PodcastEpisode?
   var parsedEpisodes = [PodcastEpisode]()
 
+  /// Reusable DateFormatters to avoid expensive allocation per episode element during parsing
+  private let slashDateFormatter: DateFormatter = {
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "M-d-yy, h:mm a"
+    dateFormatter.timeZone = NSTimeZone(name: "UTC")! as TimeZone
+    return dateFormatter
+  }()
+
+  private let isoDateFormatter: DateFormatter = {
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+    dateFormatter.timeZone = NSTimeZone(name: "UTC")! as TimeZone
+    return dateFormatter
+  }()
+
   init(
     performanceMonitor: ThreadPerformanceMonitor,
     podcast: Podcast,
@@ -91,20 +106,14 @@ class PodcastEpisodeParserDelegate: PlayableParserDelegate {
       episodeBuffer?.depictionRawParsed = buffer
     case "pubdate":
       if buffer.contains("/") { // "3/27/21, 3:30 AM"
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "M-d-yy, h:mm a"
-        dateFormatter.timeZone = NSTimeZone(name: "UTC")! as TimeZone
-        episodeBuffer?.publishDate = dateFormatter
+        episodeBuffer?.publishDate = slashDateFormatter
           .date(from: buffer) ?? Date(timeIntervalSince1970: TimeInterval())
       } else if buffer.count >= 21 { // "2011-02-03T14:46:43"
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-        dateFormatter.timeZone = NSTimeZone(name: "UTC")! as TimeZone
         let dateWithoutTimeZoneString = String(buffer[..<buffer.index(
           buffer.startIndex,
           offsetBy: 19
         )])
-        episodeBuffer?.publishDate = dateFormatter
+        episodeBuffer?.publishDate = isoDateFormatter
           .date(from: dateWithoutTimeZoneString) ?? Date(timeIntervalSince1970: TimeInterval())
       } else {
         os_log(
