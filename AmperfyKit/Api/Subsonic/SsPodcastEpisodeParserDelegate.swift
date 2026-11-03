@@ -29,12 +29,12 @@ class SsPodcastEpisodeParserDelegate: SsPlayableParserDelegate {
   var episodeBuffer: PodcastEpisode?
   var parsedEpisodes = [PodcastEpisode]()
 
-  /// Reusable DateFormatter to avoid expensive allocation per episode element during parsing
+  /// Reusable DateFormatter to avoid expensive allocation per XML element during sync/parsing
   private let publishDateFormatter: DateFormatter = {
-    let dateFormatter = DateFormatter()
-    dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-    dateFormatter.timeZone = NSTimeZone(name: "UTC")! as TimeZone
-    return dateFormatter
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+    formatter.timeZone = NSTimeZone(name: "UTC")! as TimeZone
+    return formatter
   }()
 
   init(
