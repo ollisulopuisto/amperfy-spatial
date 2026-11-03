@@ -29,6 +29,22 @@ class PodcastEpisodeParserDelegate: PlayableParserDelegate {
   var episodeBuffer: PodcastEpisode?
   var parsedEpisodes = [PodcastEpisode]()
 
+  /// Reusable DateFormatter to avoid expensive allocation per XML element during sync/parsing
+  private let publishDateShortFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "M-d-yy, h:mm a"
+    formatter.timeZone = NSTimeZone(name: "UTC")! as TimeZone
+    return formatter
+  }()
+
+  /// Reusable DateFormatter to avoid expensive allocation per XML element during sync/parsing
+  private let publishDateIsoFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+    formatter.timeZone = NSTimeZone(name: "UTC")! as TimeZone
+    return formatter
+  }()
+
   init(
     performanceMonitor: ThreadPerformanceMonitor,
     podcast: Podcast,
@@ -91,20 +107,14 @@ class PodcastEpisodeParserDelegate: PlayableParserDelegate {
       episodeBuffer?.depictionRawParsed = buffer
     case "pubdate":
       if buffer.contains("/") { // "3/27/21, 3:30 AM"
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "M-d-yy, h:mm a"
-        dateFormatter.timeZone = NSTimeZone(name: "UTC")! as TimeZone
-        episodeBuffer?.publishDate = dateFormatter
+        episodeBuffer?.publishDate = publishDateShortFormatter
           .date(from: buffer) ?? Date(timeIntervalSince1970: TimeInterval())
       } else if buffer.count >= 21 { // "2011-02-03T14:46:43"
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-        dateFormatter.timeZone = NSTimeZone(name: "UTC")! as TimeZone
         let dateWithoutTimeZoneString = String(buffer[..<buffer.index(
           buffer.startIndex,
           offsetBy: 19
         )])
-        episodeBuffer?.publishDate = dateFormatter
+        episodeBuffer?.publishDate = publishDateIsoFormatter
           .date(from: dateWithoutTimeZoneString) ?? Date(timeIntervalSince1970: TimeInterval())
       } else {
         os_log(
