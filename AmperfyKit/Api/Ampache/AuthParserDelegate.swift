@@ -29,6 +29,9 @@ class AuthParserDelegate: AmpacheXmlParser {
   private var authBuffer = AuthentificationHandshake()
   private let safetyOffsetTimeBeforeSessionExpireInMinutes: TimeInterval = -5.0 * 60.0
 
+  /// Reusable ISO8601DateFormatter to avoid repeated allocation during auth parsing
+  private let iso8601DateFormatter: ISO8601DateFormatter = .init()
+
   override func parser(
     _ parser: XMLParser,
     didEndElement elementName: String,
@@ -41,17 +44,20 @@ class AuthParserDelegate: AmpacheXmlParser {
     case "api":
       serverApiVersion = buffer
     case "session_expire":
-      authBuffer.sessionExpire = buffer.asIso8601Date ?? Date()
+      authBuffer.sessionExpire = iso8601DateFormatter.date(from: buffer) ?? Date()
       authBuffer.reauthenicateTime = Date(
         timeInterval: safetyOffsetTimeBeforeSessionExpireInMinutes,
         since: authBuffer.sessionExpire
       )
     case "update":
-      authBuffer.libraryChangeDates.dateOfLastUpdate = buffer.asIso8601Date ?? Date()
+      authBuffer.libraryChangeDates.dateOfLastUpdate = iso8601DateFormatter
+        .date(from: buffer) ?? Date()
     case "add":
-      authBuffer.libraryChangeDates.dateOfLastAdd = buffer.asIso8601Date ?? Date()
+      authBuffer.libraryChangeDates.dateOfLastAdd = iso8601DateFormatter
+        .date(from: buffer) ?? Date()
     case "clean":
-      authBuffer.libraryChangeDates.dateOfLastClean = buffer.asIso8601Date ?? Date()
+      authBuffer.libraryChangeDates.dateOfLastClean = iso8601DateFormatter
+        .date(from: buffer) ?? Date()
     case "songs":
       authBuffer.songCount = Int(buffer) ?? 0
     case "artists":
