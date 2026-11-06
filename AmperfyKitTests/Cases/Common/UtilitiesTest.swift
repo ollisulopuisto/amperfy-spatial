@@ -52,4 +52,17 @@ class UtilitiesTest: XCTestCase {
     XCTAssertFalse(Int32.isValid(value: Int(Int64.min)))
     XCTAssertFalse(Int32.isValid(value: Int(Int64.max)))
   }
+
+  func testAsColonDurationString() {
+    XCTAssertEqual(0.asColonDurationString, "0:00")
+    XCTAssertEqual(5.asColonDurationString, "0:05")
+    XCTAssertEqual(59.asColonDurationString, "0:59")
+    XCTAssertEqual(60.asColonDurationString, "1:00")
+    XCTAssertEqual(65.asColonDurationString, "1:05")
+    XCTAssertEqual(3599.asColonDurationString, "59:59")
+    XCTAssertEqual(3600.asColonDurationString, "1:00:00")
+    XCTAssertEqual(3605.asColonDurationString, "1:00:05")
+    XCTAssertEqual(3665.asColonDurationString, "1:01:05")
+    XCTAssertEqual(36000.asColonDurationString, "10:00:00")
+  }
 }

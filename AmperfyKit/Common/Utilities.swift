@@ -101,17 +101,14 @@ extension Int {
   }
 
   public var asColonDurationString: String {
-    var hourString = ""
-    let hours = self / (60 * 60)
+    // Optimized calculation: single-pass format avoiding intermediate string allocations
+    let hours = self / 3600
+    let minutes = (self % 3600) / 60
+    let seconds = self % 60
     if hours > 0 {
-      hourString += "\(hours):"
-    }
-    let minutes = (self - (hours * 60 * 60)) / 60
-    let seconds = self - ((hours * 60 * 60) + (minutes * 60))
-    if hourString.isEmpty {
-      return String(format: "%01d", minutes) + ":" + String(format: "%02d", seconds)
+      return String(format: "%d:%02d:%02d", hours, minutes, seconds)
     } else {
-      return hourString + String(format: "%02d", minutes) + ":" + String(format: "%02d", seconds)
+      return String(format: "%d:%02d", minutes, seconds)
     }
   }
 
