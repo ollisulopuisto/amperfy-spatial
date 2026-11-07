@@ -112,32 +112,49 @@ extension Int {
     }
   }
 
-  public var asDurationShortString: String {
+  // Reusable formatters to avoid repeated DateComponentsFormatter allocation and locale setup
+  private static let durationShortFormatter: DateComponentsFormatter = {
     let formatter = DateComponentsFormatter()
     formatter.allowedUnits = [.hour, .minute]
     formatter.unitsStyle = .abbreviated
-    return formatter.string(from: TimeInterval(self))!
-  }
+    return formatter
+  }()
 
-  public var asDurationString: String {
+  private static let durationFormatter: DateComponentsFormatter = {
     let formatter = DateComponentsFormatter()
     formatter.allowedUnits = [.hour, .minute, .second]
     formatter.unitsStyle = .abbreviated
-    return formatter.string(from: TimeInterval(self))!
-  }
+    return formatter
+  }()
 
-  public var asMinuteString: String {
+  private static let minuteFormatter: DateComponentsFormatter = {
     let formatter = DateComponentsFormatter()
     formatter.allowedUnits = [.minute]
     formatter.unitsStyle = .short
-    return formatter.string(from: TimeInterval(self))!
-  }
+    return formatter
+  }()
 
-  public var asDayString: String {
+  private static let dayFormatter: DateComponentsFormatter = {
     let formatter = DateComponentsFormatter()
     formatter.allowedUnits = [.day]
     formatter.unitsStyle = .short
-    return formatter.string(from: TimeInterval(self))!
+    return formatter
+  }()
+
+  public var asDurationShortString: String {
+    Self.durationShortFormatter.string(from: TimeInterval(self))!
+  }
+
+  public var asDurationString: String {
+    Self.durationFormatter.string(from: TimeInterval(self))!
+  }
+
+  public var asMinuteString: String {
+    Self.minuteFormatter.string(from: TimeInterval(self))!
+  }
+
+  public var asDayString: String {
+    Self.dayFormatter.string(from: TimeInterval(self))!
   }
 }
 
