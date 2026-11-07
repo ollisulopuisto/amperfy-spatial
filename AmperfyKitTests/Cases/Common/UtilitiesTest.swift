@@ -65,4 +65,26 @@ class UtilitiesTest: XCTestCase {
     XCTAssertEqual(3665.asColonDurationString, "1:01:05")
     XCTAssertEqual(36000.asColonDurationString, "10:00:00")
   }
+
+  func testAsDurationShortString() {
+    XCTAssertFalse(0.asDurationShortString.isEmpty)
+    XCTAssertFalse(60.asDurationShortString.isEmpty)
+    XCTAssertFalse(3660.asDurationShortString.isEmpty)
+  }
+
+  func testAsDurationString() {
+    XCTAssertFalse(0.asDurationString.isEmpty)
+    XCTAssertFalse(65.asDurationString.isEmpty)
+    XCTAssertFalse(3665.asDurationString.isEmpty)
+  }
+
+  func testAsMinuteString() {
+    XCTAssertFalse(0.asMinuteString.isEmpty)
+    XCTAssertFalse(120.asMinuteString.isEmpty)
+  }
+
+  func testAsDayString() {
+    XCTAssertFalse(0.asDayString.isEmpty)
+    XCTAssertFalse(86400.asDayString.isEmpty)
+  }
 }
