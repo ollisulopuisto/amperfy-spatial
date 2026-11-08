@@ -79,11 +79,15 @@ extension Int32 {
 }
 
 extension Int64 {
+  // Reusable formatter to avoid repeated ByteCountFormatter allocations
+  private static let byteCountFormatter: ByteCountFormatter = {
+    let formatter = ByteCountFormatter()
+    formatter.countStyle = .decimal
+    return formatter
+  }()
+
   public var asByteString: String {
-    ByteCountFormatter.string(
-      fromByteCount: self,
-      countStyle: ByteCountFormatter.CountStyle.decimal
-    )
+    Self.byteCountFormatter.string(fromByteCount: self)
   }
 }
 
@@ -167,9 +171,11 @@ extension String {
     container.contains(self)
   }
 
+  // Reusable formatter to avoid repeated ISO8601DateFormatter allocations
+  private static let iso8601DateFormatter: ISO8601DateFormatter = .init()
+
   public var asIso8601Date: Date? {
-    let dateFormatter = ISO8601DateFormatter()
-    return dateFormatter.date(from: self)
+    Self.iso8601DateFormatter.date(from: self)
   }
 
   public var asByteCount: Int? {
@@ -439,23 +445,33 @@ extension Data {
 }
 
 extension Date {
-  public var asIso8601String: String {
-    let dateFormatter = ISO8601DateFormatter()
-    return dateFormatter.string(from: self)
-  }
+  // Reusable formatters to avoid repeated DateFormatter and ISO8601DateFormatter allocations
+  private static let iso8601Formatter: ISO8601DateFormatter = .init()
 
-  public var asShortDayMonthString: String {
+  private static let shortDayMonthFormatter: DateFormatter = {
     let dateFormatter = DateFormatter()
     dateFormatter.dateFormat = "d. MMMM"
     dateFormatter.timeZone = NSTimeZone(name: "UTC")! as TimeZone
-    return dateFormatter.string(from: self)
-  }
+    return dateFormatter
+  }()
 
-  public var asShortHrMinString: String {
+  private static let shortHrMinFormatter: DateFormatter = {
     let dateFormatter = DateFormatter()
     dateFormatter.dateStyle = .none
     dateFormatter.timeStyle = .short
-    return dateFormatter.string(from: self)
+    return dateFormatter
+  }()
+
+  public var asIso8601String: String {
+    Self.iso8601Formatter.string(from: self)
+  }
+
+  public var asShortDayMonthString: String {
+    Self.shortDayMonthFormatter.string(from: self)
+  }
+
+  public var asShortHrMinString: String {
+    Self.shortHrMinFormatter.string(from: self)
   }
 }
 
