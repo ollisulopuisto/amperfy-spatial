@@ -87,4 +87,23 @@ class UtilitiesTest: XCTestCase {
     XCTAssertFalse(0.asDayString.isEmpty)
     XCTAssertFalse(86400.asDayString.isEmpty)
   }
+
+  func testAsByteString() {
+    XCTAssertFalse(Int64(0).asByteString.isEmpty)
+    XCTAssertFalse(Int64(1024).asByteString.isEmpty)
+    XCTAssertFalse(Int64(1_048_576).asByteString.isEmpty)
+  }
+
+  func testAsIso8601DateAndString() {
+    let dateStr = "2021-03-31T18:16:10Z"
+    let date = dateStr.asIso8601Date
+    XCTAssertNotNil(date)
+    XCTAssertEqual(date?.asIso8601String, dateStr)
+  }
+
+  func testDateShortFormatters() {
+    let date = Date(timeIntervalSince1970: 1617192000) // 2021-03-31 12:00:00 UTC
+    XCTAssertFalse(date.asShortDayMonthString.isEmpty)
+    XCTAssertFalse(date.asShortHrMinString.isEmpty)
+  }
 }
