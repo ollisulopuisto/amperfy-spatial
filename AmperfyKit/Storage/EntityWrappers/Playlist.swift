@@ -96,17 +96,22 @@ public class Playlist: Identifyable {
   /// returns number of playables that are already contained in playlist
   public func contains(playables playablesToCheck: [AbstractPlayable])
     -> OrderedSet<AbstractPlayable> {
-    let playableSet = OrderedSet<AbstractPlayable>(playables)
-    let playablesToCheckSet = OrderedSet<AbstractPlayable>(playablesToCheck)
-    return playableSet.intersection(playablesToCheckSet)
+    guard !managedObject.items.isEmpty, !playablesToCheck.isEmpty else { return [] }
+    // Optimization: Build a Set of objectIDs directly from existing PlaylistItem managed objects
+    // to avoid mapping all items into wrapper AbstractPlayable instances and building two full OrderedSets.
+    let existingItemIDs: Set<NSManagedObjectID> = Set(managedObject.items.map { $0.playable.objectID })
+    return OrderedSet(playablesToCheck.filter { existingItemIDs.contains($0.objectID) })
   }
 
   /// return a set of playables that are not already part of this playlist
   public func notContaines(playables playablesToCheck: [AbstractPlayable])
     -> OrderedSet<AbstractPlayable> {
-    let playableSet = OrderedSet<AbstractPlayable>(playables)
-    let playablesToCheckSet = OrderedSet<AbstractPlayable>(playablesToCheck)
-    return playablesToCheckSet.subtracting(playableSet)
+    guard !playablesToCheck.isEmpty else { return [] }
+    guard !managedObject.items.isEmpty else { return OrderedSet(playablesToCheck) }
+    // Optimization: Avoid mapping all playlist items into AbstractPlayable wrappers and full OrderedSets.
+    // Use O(1) set lookups on NSManagedObjectID for O(N + M) complexity instead of O(N log N + M log M).
+    let existingItemIDs: Set<NSManagedObjectID> = Set(managedObject.items.map { $0.playable.objectID })
+    return OrderedSet(playablesToCheck.filter { !existingItemIDs.contains($0.objectID) })
   }
 
   public var songCount: Int {

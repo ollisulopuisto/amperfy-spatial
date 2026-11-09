@@ -631,4 +631,32 @@ class PlaylistTest: XCTestCase {
     checkPlaylistIndexEqualSeedIndex(playlistIndex: 3, seedIndex: 4)
     checkPlaylistIndexEqualSeedIndex(playlistIndex: 4, seedIndex: 2)
   }
+
+  func testContainsAndNotContainesPlayables() {
+    resetTestPlaylist()
+    let seedSongs = cdHelper.seeder.songs
+    guard let song0 = library.getSong(for: account, id: seedSongs[0].id),
+          let song1 = library.getSong(for: account, id: seedSongs[1].id),
+          let song2 = library.getSong(for: account, id: seedSongs[2].id),
+          let unaddedSong = library.getSong(for: account, id: seedSongs[5].id)
+    else {
+      XCTFail("Failed to retrieve songs")
+      return
+    }
+
+    let contained = testPlaylist.contains(playables: [song0, unaddedSong, song2, song0])
+    XCTAssertEqual(contained.count, 2)
+    XCTAssertEqual(contained[0], song0)
+    XCTAssertEqual(contained[1], song2)
+
+    let notContained = testPlaylist.notContaines(playables: [song1, unaddedSong, song2, unaddedSong])
+    XCTAssertEqual(notContained.count, 1)
+    XCTAssertEqual(notContained[0], unaddedSong)
+
+    let emptyContained = testPlaylist.contains(playables: [])
+    XCTAssertTrue(emptyContained.isEmpty)
+
+    let emptyNotContained = testPlaylist.notContaines(playables: [])
+    XCTAssertTrue(emptyNotContained.isEmpty)
+  }
 }
