@@ -89,7 +89,9 @@ public typealias SelectedCallback = (Bool) -> ()
 public class AddToPlaylistManager {
   public var playlist: Playlist!
   public var onDoneCB: VoidFunctionCallback?
-  public var elementsToAdd = [AbstractPlayable]()
+  /// Performance: Use OrderedSet to maintain insertion order with O(1) membership lookup.
+  /// Avoids repeated linear array scans during cell rendering and removes intermediate set conversions during toggling.
+  public var elementsToAdd = OrderedSet<AbstractPlayable>()
   public var rootView: UIViewController?
 
   private var appDelegate: AppDelegate
@@ -109,9 +111,8 @@ public class AddToPlaylistManager {
   }
 
   func contains(playable: AbstractPlayable) -> Bool {
-    elementsToAdd.contains(where: {
-      $0 == playable
-    })
+    // O(1) lookup in OrderedSet instead of O(N) linear array search
+    elementsToAdd.contains(playable)
   }
 
   func toggleSelection(
@@ -119,12 +120,11 @@ public class AddToPlaylistManager {
     rootVC: UIViewController,
     doneCB: @escaping VoidFunctionCallback
   ) {
-    let elementsToAddSet = OrderedSet<AbstractPlayable>(elementsToAdd)
     let playableToToggleSet = OrderedSet<AbstractPlayable>(playables)
-    let itemsAlreadyAboutToGetAdded = elementsToAddSet.intersection(playableToToggleSet)
+    let itemsAlreadyAboutToGetAdded = elementsToAdd.intersection(playableToToggleSet)
     guard itemsAlreadyAboutToGetAdded.isEmpty else {
       // unselect all provided playables
-      elementsToAdd = Array(elementsToAddSet.subtracting(itemsAlreadyAboutToGetAdded))
+      elementsToAdd.subtract(itemsAlreadyAboutToGetAdded)
       doneCB()
       return
     }
@@ -172,9 +172,8 @@ public class AddToPlaylistManager {
     rootVC: UIViewController,
     isSelectedCB: @escaping SelectedCallback
   ) {
-    let markedIndex = elementsToAdd.firstIndex { $0 == playable }
-    if let markedIndex = markedIndex {
-      elementsToAdd.remove(at: markedIndex)
+    if elementsToAdd.contains(playable) {
+      elementsToAdd.remove(playable)
       isSelectedCB(false)
     } else {
       append(playable: playable, rootVC: rootVC, isSelectedCB: isSelectedCB)
@@ -210,7 +209,7 @@ public class AddToPlaylistManager {
   }
 
   func remove(playable: AbstractPlayable) {
-    elementsToAdd.removeAll(where: { $0 == playable })
+    elementsToAdd.remove(playable)
   }
 
   func createDoneButton() -> UIBarButtonItem {
@@ -224,7 +223,7 @@ public class AddToPlaylistManager {
 
   @IBAction
   func doneBarButtonPressed(_ sender: UIBarButtonItem) {
-    let songsToAdd = elementsToAdd.filterSongs()
+    let songsToAdd = elementsToAdd.elements.filterSongs()
     guard !songsToAdd.isEmpty else {
       rootView?.dismiss(animated: true, completion: nil)
       return
