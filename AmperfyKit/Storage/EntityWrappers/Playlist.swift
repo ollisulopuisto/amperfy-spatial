@@ -97,10 +97,16 @@ public class Playlist: Identifyable {
   public func contains(playables playablesToCheck: [AbstractPlayable])
     -> OrderedSet<AbstractPlayable> {
     guard !managedObject.items.isEmpty, !playablesToCheck.isEmpty else { return [] }
-    // Optimization: Build a Set of objectIDs directly from existing PlaylistItem managed objects
-    // to avoid mapping all items into wrapper AbstractPlayable instances and building two full OrderedSets.
-    let existingItemIDs: Set<NSManagedObjectID> = Set(managedObject.items.map { $0.playable.objectID })
-    return OrderedSet(playablesToCheck.filter { existingItemIDs.contains($0.objectID) })
+    // Optimization: only the songs being checked are mapped to objectIDs, and only
+    // matching playlist items are wrapped into AbstractPlayable instances.
+    // The result must follow playlist order (the pre-optimization intersection
+    // contract), not the order of playablesToCheck. Devin finding on #9.
+    let checkIDs: Set<NSManagedObjectID> = Set(playablesToCheck.map { $0.objectID })
+    return OrderedSet(
+      managedObject.items
+        .filter { checkIDs.contains($0.playable.objectID) }
+        .compactMap { AbstractPlayable(managedObject: $0.playable) }
+    )
   }
 
   /// return a set of playables that are not already part of this playlist
