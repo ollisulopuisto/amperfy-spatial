@@ -91,9 +91,7 @@ public class AddToPlaylistManager {
   public var onDoneCB: VoidFunctionCallback?
   // Keep every occurrence when copying playlists that repeat songs. Cache only
   // membership, not the selection itself, for constant-time cell lookups.
-  public var elementsToAdd = [AbstractPlayable]() {
-    didSet { selectedPlayables = Set(elementsToAdd) }
-  }
+  public var elementsToAdd = [AbstractPlayable]()
   private var selectedPlayables = Set<AbstractPlayable>()
   public var rootView: UIViewController?
 
@@ -127,12 +125,14 @@ public class AddToPlaylistManager {
     guard itemsAlreadyAboutToGetAdded.isEmpty else {
       // unselect all provided playables
       elementsToAdd.removeAll { itemsAlreadyAboutToGetAdded.contains($0) }
+      selectedPlayables.subtract(itemsAlreadyAboutToGetAdded)
       doneCB()
       return
     }
 
     func handleSuccessfullSelection(playables: [AbstractPlayable]) {
       elementsToAdd.append(contentsOf: playables)
+      selectedPlayables.formUnion(playables)
       doneCB()
     }
     let itemsNotContained = playlist.notContaines(playables: playables)
@@ -176,6 +176,9 @@ public class AddToPlaylistManager {
   ) {
     if let markedIndex = elementsToAdd.firstIndex(of: playable) {
       elementsToAdd.remove(at: markedIndex)
+      if !elementsToAdd.contains(playable) {
+        selectedPlayables.remove(playable)
+      }
       isSelectedCB(false)
     } else {
       append(playable: playable, rootVC: rootVC, isSelectedCB: isSelectedCB)
@@ -189,6 +192,7 @@ public class AddToPlaylistManager {
   ) {
     func handleSuccessfullSelection(playables: [AbstractPlayable]) {
       elementsToAdd.append(playable)
+      selectedPlayables.insert(playable)
       isSelectedCB(true)
     }
     let itemsNotContained = playlist.notContaines(playables: [playable])
@@ -212,6 +216,7 @@ public class AddToPlaylistManager {
 
   func remove(playable: AbstractPlayable) {
     elementsToAdd.removeAll { $0 == playable }
+    selectedPlayables.remove(playable)
   }
 
   func createDoneButton() -> UIBarButtonItem {
