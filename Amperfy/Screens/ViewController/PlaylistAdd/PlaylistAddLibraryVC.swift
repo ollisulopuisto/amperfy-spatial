@@ -91,7 +91,8 @@ public class AddToPlaylistManager {
   public var onDoneCB: VoidFunctionCallback?
   // Keep every occurrence when copying playlists that repeat songs. Cache only
   // membership, not the selection itself, for constant-time cell lookups.
-  public var elementsToAdd = [AbstractPlayable]()
+  // Mutate through this manager so the cached membership cannot go stale.
+  public private(set) var elementsToAdd = [AbstractPlayable]()
   private var selectedPlayables = Set<AbstractPlayable>()
   public var rootView: UIViewController?
 
