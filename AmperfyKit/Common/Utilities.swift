@@ -214,18 +214,31 @@ extension String {
   }
 
   public var sectionInitial: String {
-    guard !isEmpty else { return "?" }
+    guard let firstChar = first else { return "?" }
+    // Fast path: pure ASCII letters and digits avoid expensive folding and CharacterSet allocations
+    if firstChar.isASCII, let scalar = firstChar.unicodeScalars.first {
+      let asciiVal = scalar.value
+      if (asciiVal >= 65 && asciiVal <= 90) || (asciiVal >= 97 && asciiVal <= 122) {
+        return String(firstChar).uppercased()
+      } else if asciiVal >= 48 && asciiVal <= 57 {
+        return "#"
+      }
+    }
+
+    // Slow path: diacritics / unicode letters
     let initial = String(
       prefix(1).folding(options: .diacriticInsensitive, locale: nil)
         .uppercased()
     )
-    if let _ = initial.rangeOfCharacter(from: CharacterSet.decimalDigits) {
-      return "#"
-    } else if let _ = initial
-      .rangeOfCharacter(from: CharacterSet(charactersIn: String.uppercaseAsciiLetters)) {
-      return initial
-    } else if let _ = initial
-      .rangeOfCharacter(from: CharacterSet.letters) { // japanese / chinese letters
+    if let foldedScalar = initial.unicodeScalars.first {
+      let val = foldedScalar.value
+      if val >= 48 && val <= 57 {
+        return "#"
+      } else if val >= 65 && val <= 90 {
+        return initial
+      }
+    }
+    if firstChar.isLetter { // non-Latin letters (e.g. Japanese / Chinese letters)
       return "&"
     } else {
       return "?"
