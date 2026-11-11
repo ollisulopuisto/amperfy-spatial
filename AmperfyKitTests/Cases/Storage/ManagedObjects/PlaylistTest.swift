@@ -649,6 +649,13 @@ class PlaylistTest: XCTestCase {
     XCTAssertEqual(contained[0], song0)
     XCTAssertEqual(contained[1], song2)
 
+    // Regression (Devin on #9): the result follows playlist order even when the
+    // checked songs are passed in a different order.
+    let reordered = testPlaylist.contains(playables: [song2, song0])
+    XCTAssertEqual(reordered.count, 2)
+    XCTAssertEqual(reordered[0], song0)
+    XCTAssertEqual(reordered[1], song2)
+
     let notContained = testPlaylist.notContaines(playables: [song1, unaddedSong, song2, unaddedSong])
     XCTAssertEqual(notContained.count, 1)
     XCTAssertEqual(notContained[0], unaddedSong)
