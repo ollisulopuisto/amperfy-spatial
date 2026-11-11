@@ -79,12 +79,13 @@ extension Int32 {
 }
 
 extension Int64 {
-  // Reusable formatter to avoid repeated ByteCountFormatter allocations
-  private static let byteCountFormatter: ByteCountFormatter = {
+  // Created per access: a shared static ByteCountFormatter is rejected by
+  // Swift 6.1 (Xcode 16.4) as concurrency-unsafe shared mutable state.
+  private static var byteCountFormatter: ByteCountFormatter {
     let formatter = ByteCountFormatter()
     formatter.countStyle = .decimal
     return formatter
-  }()
+  }
 
   public var asByteString: String {
     Self.byteCountFormatter.string(fromByteCount: self)
@@ -171,8 +172,9 @@ extension String {
     container.contains(self)
   }
 
-  // Reusable formatter to avoid repeated ISO8601DateFormatter allocations
-  private static let iso8601DateFormatter: ISO8601DateFormatter = .init()
+  // Created per access: a shared static ISO8601DateFormatter is rejected by
+  // Swift 6.1 (Xcode 16.4) as concurrency-unsafe shared mutable state.
+  private static var iso8601DateFormatter: ISO8601DateFormatter { ISO8601DateFormatter() }
 
   public var asIso8601Date: Date? {
     Self.iso8601DateFormatter.date(from: self)
@@ -445,8 +447,10 @@ extension Data {
 }
 
 extension Date {
-  // Reusable formatters to avoid repeated DateFormatter and ISO8601DateFormatter allocations
-  private static let iso8601Formatter: ISO8601DateFormatter = .init()
+  // iso8601Formatter is created per access: a shared static
+  // ISO8601DateFormatter is rejected by Swift 6.1 (Xcode 16.4) as
+  // concurrency-unsafe shared mutable state.
+  private static var iso8601Formatter: ISO8601DateFormatter { ISO8601DateFormatter() }
 
   private static let shortDayMonthFormatter: DateFormatter = {
     let dateFormatter = DateFormatter()
