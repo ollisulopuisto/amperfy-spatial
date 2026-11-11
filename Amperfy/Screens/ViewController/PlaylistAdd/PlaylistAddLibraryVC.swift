@@ -89,7 +89,11 @@ public typealias SelectedCallback = (Bool) -> ()
 public class AddToPlaylistManager {
   public var playlist: Playlist!
   public var onDoneCB: VoidFunctionCallback?
-  public var elementsToAdd = [AbstractPlayable]()
+  // Keep every occurrence when copying playlists that repeat songs. Cache only
+  // membership, not the selection itself, for constant-time cell lookups.
+  // Mutate through this manager so the cached membership cannot go stale.
+  public private(set) var elementsToAdd = [AbstractPlayable]()
+  private var selectedPlayables = Set<AbstractPlayable>()
   public var rootView: UIViewController?
 
   private var appDelegate: AppDelegate
@@ -109,9 +113,7 @@ public class AddToPlaylistManager {
   }
 
   func contains(playable: AbstractPlayable) -> Bool {
-    elementsToAdd.contains(where: {
-      $0 == playable
-    })
+    selectedPlayables.contains(playable)
   }
 
   func toggleSelection(
@@ -119,18 +121,19 @@ public class AddToPlaylistManager {
     rootVC: UIViewController,
     doneCB: @escaping VoidFunctionCallback
   ) {
-    let elementsToAddSet = OrderedSet<AbstractPlayable>(elementsToAdd)
     let playableToToggleSet = OrderedSet<AbstractPlayable>(playables)
-    let itemsAlreadyAboutToGetAdded = elementsToAddSet.intersection(playableToToggleSet)
+    let itemsAlreadyAboutToGetAdded = selectedPlayables.intersection(playableToToggleSet)
     guard itemsAlreadyAboutToGetAdded.isEmpty else {
       // unselect all provided playables
-      elementsToAdd = Array(elementsToAddSet.subtracting(itemsAlreadyAboutToGetAdded))
+      elementsToAdd.removeAll { itemsAlreadyAboutToGetAdded.contains($0) }
+      selectedPlayables.subtract(itemsAlreadyAboutToGetAdded)
       doneCB()
       return
     }
 
     func handleSuccessfullSelection(playables: [AbstractPlayable]) {
       elementsToAdd.append(contentsOf: playables)
+      selectedPlayables.formUnion(playables)
       doneCB()
     }
     let itemsNotContained = playlist.notContaines(playables: playables)
@@ -172,9 +175,11 @@ public class AddToPlaylistManager {
     rootVC: UIViewController,
     isSelectedCB: @escaping SelectedCallback
   ) {
-    let markedIndex = elementsToAdd.firstIndex { $0 == playable }
-    if let markedIndex = markedIndex {
+    if let markedIndex = elementsToAdd.firstIndex(of: playable) {
       elementsToAdd.remove(at: markedIndex)
+      if !elementsToAdd.contains(playable) {
+        selectedPlayables.remove(playable)
+      }
       isSelectedCB(false)
     } else {
       append(playable: playable, rootVC: rootVC, isSelectedCB: isSelectedCB)
@@ -188,6 +193,7 @@ public class AddToPlaylistManager {
   ) {
     func handleSuccessfullSelection(playables: [AbstractPlayable]) {
       elementsToAdd.append(playable)
+      selectedPlayables.insert(playable)
       isSelectedCB(true)
     }
     let itemsNotContained = playlist.notContaines(playables: [playable])
@@ -210,7 +216,8 @@ public class AddToPlaylistManager {
   }
 
   func remove(playable: AbstractPlayable) {
-    elementsToAdd.removeAll(where: { $0 == playable })
+    elementsToAdd.removeAll { $0 == playable }
+    selectedPlayables.remove(playable)
   }
 
   func createDoneButton() -> UIBarButtonItem {
