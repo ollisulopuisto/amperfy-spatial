@@ -106,4 +106,23 @@ class UtilitiesTest: XCTestCase {
     XCTAssertFalse(date.asShortDayMonthString.isEmpty)
     XCTAssertFalse(date.asShortHrMinString.isEmpty)
   }
+
+  func testSectionInitial() {
+    XCTAssertEqual("".sectionInitial, "?")
+    XCTAssertEqual("The Beatles".sectionInitial, "T")
+    XCTAssertEqual("the beatles".sectionInitial, "T")
+    XCTAssertEqual("1975".sectionInitial, "#")
+    XCTAssertEqual("0 items".sectionInitial, "#")
+    XCTAssertEqual("99 Luftballons".sectionInitial, "#")
+    XCTAssertEqual("Édith Piaf".sectionInitial, "E")
+    XCTAssertEqual("édith piaf".sectionInitial, "E")
+    XCTAssertEqual("e\u{0301}dith piaf".sectionInitial, "E")
+    XCTAssertEqual("Ásgeir".sectionInitial, "A")
+    XCTAssertEqual("Ötzi".sectionInitial, "O")
+    XCTAssertEqual("übel".sectionInitial, "U")
+    XCTAssertEqual("坂本龍一".sectionInitial, "&")
+    XCTAssertEqual("!Special".sectionInitial, "?")
+    XCTAssertEqual("?Unknown".sectionInitial, "?")
+    XCTAssertEqual("---".sectionInitial, "?")
+  }
 }
